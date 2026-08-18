@@ -64,90 +64,55 @@ Questions I Wanted to Answer From the Dataset:
 
 WITH dept_year AS (
 
-    SELECT 
-    
+    SELECT    
         dep.dept_name,
-        
         EXTRACT(YEAR FROM deptemp.from_date) AS only_year,
-        
         deptemp.emp_no
-        
     FROM employees.dept_emp deptemp
-    
     INNER JOIN employees.departments dep 
-    
         ON deptemp.dept_no = dep.dept_no
-        
 ),
 
 salary_year AS (
 
     SELECT 
-    
-        sal.emp_no,
-        
+        sal.emp_no, 
         EXTRACT(YEAR FROM sal.from_date) AS only_year,
-        
-        sal.salary
-        
-    FROM employees.salaries sal 
-    
+        sal.salary 
+    FROM employees.salaries sal   
 ),
 
 dept_sum AS (
 
     SELECT 
-    
         dy.only_year,
-        
         dy.dept_name,
-        
         COUNT(DISTINCT dy.emp_no) AS CountOfEmp,
-        
         AVG(sy.salary) AS AvgSal
-        
     FROM dept_year dy
-    
     INNER JOIN salary_year sy
-    
         ON dy.emp_no = sy.emp_no 
-        
        AND dy.only_year = sy.only_year
-       
     GROUP BY dy.only_year, dy.dept_name
-    
 ),
 
 ranked AS (
 
     SELECT *,
-    
            ROW_NUMBER() OVER (
-           
                PARTITION BY only_year 
-               
                ORDER BY CountOfEmp DESC
-               
            ) AS rankbyemp
-           
     FROM dept_sum
-    
 )
 
 SELECT 
-
     only_year,
-    
     dept_name,
-    
     CountOfEmp,
-    
     ROUND(AvgSal, 2) AS AvarageSalary
-    
 FROM ranked 
-
 WHERE rankbyemp = 1
-
 ORDER BY only_year;
 
 Result:
@@ -157,6 +122,7 @@ Result:
 
 
 2. Which current manager has been working in the position the longest?
+
 SELECT emp.emp_no,
        dep.dept_name,
        deptman.dept_no,
@@ -179,6 +145,7 @@ INNER JOIN employees.departments dep
 WHERE CURRENT_DATE BETWEEN deptman.from_date AND deptman.to_date
 ORDER BY work_as_manager DESC 
 LIMIT 1;
+
 Result:
 
 
@@ -186,6 +153,7 @@ Result:
 
 
 3. What was the average employee salary for each year before 2005?
+
 SELECT 
     YEAR(sal.from_date) AS YearOfSal,
     ROUND(AVG(sal.salary), 2) AS AvgSal
@@ -193,6 +161,7 @@ FROM employees.salaries sal
 WHERE sal.from_date < '2005-01-01'
 GROUP BY YEAR(sal.from_date)
 ORDER BY YEAR(sal.from_date) DESC;
+
 Result:
 
 
@@ -200,7 +169,9 @@ Result:
 
 
 4. What is the current average salary in each department?
+
 The calculation is based on the employee’s current salary and current department.
+
 SELECT dept.dept_no,
        dept.dept_name,
        ROUND(AVG(sal.salary), 2) AS AvgSal
@@ -214,6 +185,7 @@ WHERE CURRENT_DATE() BETWEEN deptemp.from_date AND deptemp.to_date
 GROUP BY dept.dept_no,
          dept.dept_name
 ORDER BY dept.dept_no ASC;
+
 Result:
 
 
@@ -221,6 +193,7 @@ Result:
 
 
 5. What was the average salary in each department for each year?
+
 SELECT 
     deptemp.dept_no,
     YEAR(sal.from_date) AS YearOfSal,
@@ -231,6 +204,7 @@ INNER JOIN employees.salaries sal
 GROUP BY deptemp.dept_no,
          YEAR(sal.from_date)
 ORDER BY deptemp.dept_no ASC;
+
 Result:
 
 
@@ -238,6 +212,7 @@ Result:
 
 
 6. Which departments currently have more than 15,000 employees?
+
 SELECT 
     deptemp.dept_no,
     dep.dept_name,
@@ -249,6 +224,7 @@ INNER JOIN employees.dept_emp deptemp
 GROUP BY deptemp.dept_no
 HAVING COUNT(deptemp.emp_no) > 15000
 ORDER BY deptemp.dept_no ASC;
+
 Result:
 
 
@@ -256,6 +232,7 @@ Result:
 
 
 7. Who is the longest-serving current manager?
+
 SELECT 
     emp.emp_no,
     deptman.dept_no,
@@ -270,6 +247,7 @@ INNER JOIN employees.departments dep
 WHERE CURRENT_DATE BETWEEN deptman.from_date AND deptman.to_date
 ORDER BY emp.hire_date ASC
 LIMIT 1;
+
 Result:
 
 
@@ -277,6 +255,7 @@ Result:
 
 
 8. Which 10 current employees have the largest difference between their salary and the average salary of their department?
+
 WITH DeptAvgSalary AS (
     SELECT 
         deptemp.dept_no,
@@ -311,6 +290,7 @@ INNER JOIN DeptAvgSalary depavgsal
     AND CURRENT_DATE BETWEEN sal.from_date AND sal.to_date
 ORDER BY ABS(sal.salary - depavgsal.AvgSalary) DESC
 LIMIT 10;
+
 Result:
 
 
@@ -318,6 +298,7 @@ Result:
 
 
 9. Who was the second manager of each department?
+
 CREATE TEMPORARY TABLE IF NOT EXISTS employees.temp_manager
 AS 
 SELECT 
@@ -339,6 +320,7 @@ INNER JOIN employees.departments dep
 SELECT *
 FROM employees.temp_manager
 WHERE RowNumber = 2;
+
 Result:
 
 
@@ -346,50 +328,17 @@ Result:
 
 
 Part 2 — Course Management Database
+
 The second part focuses on creating a relational database for managing teachers, courses, and students.
-Database Structure
-teachers
-Column
-Description
-teacher_no
-Primary key
-teacher_name
-Teacher’s name
-phone_no
-Teacher’s phone number
-courses
-Column
-Description
-course_no
-Primary key
-course_name
-Course name
-start_date
-Course start date
-end_date
-Course end date
-students
-Column
-Description
-student_no
-Primary key
-teacher_no
-Foreign key → teachers
-course_no
-Foreign key → courses
-student_name
-Student’s name
-email
-Student’s email
-birth_date
-Student’s date of birth
 
 
 ⸻
 
 
-Questions I Wanted to Answer From the Course Database
+Questions I Wanted to Answer From the Course Database:
+
 10. How many students has each teacher worked with?
+
 SELECT 
     teach.teacher_no,
     teach.teacher_name,
@@ -400,6 +349,7 @@ INNER JOIN course_system.students stud
 GROUP BY teach.teacher_no,
          teach.teacher_name
 ORDER BY teach.teacher_no;
+
 Result:
 
 
@@ -407,7 +357,9 @@ Result:
 
 
 11. Which rows are duplicated in the students table?
+
 First, three duplicate rows were intentionally added:
+
 INSERT INTO students (
     teacher_no,
     course_no,
@@ -439,6 +391,7 @@ GROUP BY
     email,
     birth_date
 HAVING COUNT(*) > 1;
+
 Result:
 
 
@@ -446,29 +399,53 @@ Result:
 
 
 🛠️ SQL Skills Demonstrated
+
 SELECT
+
 WHERE
+
 ORDER BY
+
 GROUP BY
+
 HAVING
+
 INNER JOIN
+
 COUNT()
+
 AVG()
+
 YEAR()
+
 EXTRACT()
+
 TIMESTAMPDIFF()
+
 CONCAT()
+
 ROUND()
+
 ABS()
+
 Common Table Expressions (CTEs)
+
 Window Functions
+
 ROW_NUMBER()
+
 Temporary Tables
+
 Transactions
+
 Database & Table Creation
+
 Primary Keys
+
 Foreign Keys
+
 Referential Integrity
+
 Duplicate Detection
 
 
@@ -476,7 +453,9 @@ Duplicate Detection
 
 
 📂 Project Structure
+
 sql-data-analysis-project/
+
 │
 ├── SQL Step Project Kucheruk Sofia.sql
 ├── README.md
@@ -499,13 +478,23 @@ sql-data-analysis-project/
 
 
 🎯 Project Goal
+
 The goal of this project was to strengthen practical SQL skills through data analysis and relational database design.
+
 The project demonstrates how SQL can be used to:
+
 analyze employee and salary data;
+
 work with multiple related tables;
+
 calculate business metrics;
+
 use advanced SQL techniques;
+
 create relational databases;
+
 establish relationships between tables;
+
 identify duplicate records.
-This project is part of my Data Analyst portfolio.
+
+This project is part of my Data Analyst portfolio:)
