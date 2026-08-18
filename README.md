@@ -171,7 +171,194 @@ Result:
 SELECT 
     deptemp.dept_no,
     dep.dept_name,
-    COUNT(deptemp.email,
+    COUNT(deptemp.emp_no) AS CountOfEmp
+FROM employees.departments dep
+INNER JOIN employees.dept_emp deptemp
+    ON dep.dept_no = deptemp.dept_no
+    AND CURRENT_DATE BETWEEN deptemp.from_date AND deptemp.to_date
+GROUP BY deptemp.dept_no
+HAVING COUNT(deptemp.emp_no) > 15000
+ORDER BY deptemp.dept_no ASC;
+Result:
+
+
+⸻
+
+
+7. Who is the longest-serving current manager?
+SELECT 
+    emp.emp_no,
+    deptman.dept_no,
+    dep.dept_name,
+    emp.hire_date,
+    emp.last_name
+FROM employees.employees emp
+INNER JOIN employees.dept_manager deptman
+    ON emp.emp_no = deptman.emp_no
+INNER JOIN employees.departments dep
+    ON deptman.dept_no = dep.dept_no
+WHERE CURRENT_DATE BETWEEN deptman.from_date AND deptman.to_date
+ORDER BY emp.hire_date ASC
+LIMIT 1;
+Result:
+
+
+⸻
+
+
+8. Which 10 current employees have the largest difference between their salary and the average salary of their department?
+WITH DeptAvgSalary AS (
+    SELECT 
+        deptemp.dept_no,
+        AVG(sal.salary) AS AvgSalary
+    FROM employees.dept_emp deptemp
+    INNER JOIN employees.salaries sal
+        ON deptemp.emp_no = sal.emp_no
+        AND CURRENT_DATE BETWEEN deptemp.from_date AND deptemp.to_date
+        AND CURRENT_DATE BETWEEN sal.from_date AND sal.to_date
+    GROUP BY deptemp.dept_no
+)
+SELECT 
+    emp.emp_no,
+    CONCAT(emp.first_name, " ", emp.last_name) AS full_name,
+    dep.dept_no,
+    dep.dept_name,
+    sal.salary,
+    ROUND(
+        ABS(sal.salary - depavgsal.AvgSalary),
+        2
+    ) AS SalaryDiff
+FROM employees.employees emp
+INNER JOIN employees.dept_emp deptemp
+    ON emp.emp_no = deptemp.emp_no
+INNER JOIN employees.departments dep
+    ON deptemp.dept_no = dep.dept_no
+INNER JOIN employees.salaries sal
+    ON emp.emp_no = sal.emp_no
+INNER JOIN DeptAvgSalary depavgsal
+    ON deptemp.dept_no = depavgsal.dept_no
+    AND CURRENT_DATE BETWEEN deptemp.from_date AND deptemp.to_date
+    AND CURRENT_DATE BETWEEN sal.from_date AND sal.to_date
+ORDER BY ABS(sal.salary - depavgsal.AvgSalary) DESC
+LIMIT 10;
+Result:
+
+
+⸻
+
+
+9. Who was the second manager of each department?
+CREATE TEMPORARY TABLE IF NOT EXISTS employees.temp_manager
+AS 
+SELECT 
+    dep.dept_no,
+    dep.dept_name,
+    CONCAT(emp.first_name, " ", emp.last_name) AS full_name,
+    emp.hire_date AS EmployeeHireDate,
+    deptman.from_date AS ManagerStartDate,
+    ROW_NUMBER() OVER (
+        PARTITION BY dep.dept_no 
+        ORDER BY deptman.from_date
+    ) AS RowNumber
+FROM employees.employees emp
+INNER JOIN employees.dept_manager deptman
+    ON emp.emp_no = deptman.emp_no
+INNER JOIN employees.departments dep
+    ON deptman.dept_no = dep.dept_no;
+
+SELECT *
+FROM employees.temp_manager
+WHERE RowNumber = 2;
+Result:
+
+
+⸻
+
+
+Part 2 — Course Management Database
+The second part focuses on creating a relational database for managing teachers, courses, and students.
+Database Structure
+teachers
+Column
+Description
+teacher_no
+Primary key
+teacher_name
+Teacher’s name
+phone_no
+Teacher’s phone number
+courses
+Column
+Description
+course_no
+Primary key
+course_name
+Course name
+start_date
+Course start date
+end_date
+Course end date
+students
+Column
+Description
+student_no
+Primary key
+teacher_no
+Foreign key → teachers
+course_no
+Foreign key → courses
+student_name
+Student’s name
+email
+Student’s email
+birth_date
+Student’s date of birth
+
+
+⸻
+
+
+Questions I Wanted to Answer From the Course Database
+10. How many students has each teacher worked with?
+SELECT 
+    teach.teacher_no,
+    teach.teacher_name,
+    COUNT(stud.student_name)
+FROM course_system.teachers teach
+INNER JOIN course_system.students stud
+    ON teach.teacher_no = stud.teacher_no
+GROUP BY teach.teacher_no,
+         teach.teacher_name
+ORDER BY teach.teacher_no;
+Result:
+
+
+⸻
+
+
+11. Which rows are duplicated in the students table?
+First, three duplicate rows were intentionally added:
+INSERT INTO students (
+    teacher_no,
+    course_no,
+    student_name,
+    email,
+    birth_date
+)
+SELECT 
+    teacher_no,
+    course_no,
+    student_name,
+    email,
+    birth_date
+FROM course_system.students
+LIMIT 3;
+Then the duplicate rows were identified:
+SELECT 
+    teacher_no,
+    course_no,
+    student_name,
+    email,
     birth_date,
     COUNT(*) AS CountOfDuplicates
 FROM course_system.students
