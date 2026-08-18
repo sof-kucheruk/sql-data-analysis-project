@@ -44,8 +44,6 @@ The first part focuses on analyzing an employee database containing information 
 ### 1. Which department was the largest in each year, and what was its average salary?
 
 SQL Query
-
-```sql
 WITH dept_year AS (
     SELECT
         dep.dept_name,
@@ -191,8 +189,7 @@ FROM employees.dept_emp deptemp
 INNER JOIN employees.salaries sal
     ON deptemp.emp_no = sal.emp_no
 GROUP BY
-    deptemp.
-    dept_no,
+    deptemp.dept_no,
     YEAR(sal.from_date)
 ORDER BY deptemp.dept_no ASC;
 
@@ -460,3 +457,4 @@ The project demonstrates how SQL can be used to:
 Sofia Kucheruk
 
 Aspiring Data Analyst with a focus on SQL, Power BI, Excel and Python.
+    
