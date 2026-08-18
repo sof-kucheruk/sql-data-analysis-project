@@ -44,55 +44,97 @@ The first part focuses on analyzing an employee database containing information 
 ### 1. Which department was the largest in each year, and what was its average salary?
 
 SQL Query
+
 WITH dept_year AS (
+
     SELECT
+    
         dep.dept_name,
+        
         EXTRACT(YEAR FROM deptemp.from_date) AS only_year,
+        
         deptemp.emp_no
+        
     FROM employees.dept_emp deptemp
+    
     INNER JOIN employees.departments dep
+    
         ON deptemp.dept_no = dep.dept_no
+        
 ),
 
 salary_year AS (
+
     SELECT
+    
         sal.emp_no,
+        
         EXTRACT(YEAR FROM sal.from_date) AS only_year,
+        
         sal.salary
+        
     FROM employees.salaries sal
+    
 ),
 
 dept_sum AS (
+
     SELECT
+    
         dy.only_year,
+        
         dy.dept_name,
+        
         COUNT(DISTINCT dy.emp_no) AS CountOfEmp,
+        
         AVG(sy.salary) AS AvgSal
+        
     FROM dept_year dy
+    
     INNER JOIN salary_year sy
+    
         ON dy.emp_no = sy.emp_no
+        
         AND dy.only_year = sy.only_year
+        
     GROUP BY
+    
         dy.only_year,
+        
         dy.dept_name
+        
 ),
 
 ranked AS (
+
     SELECT *,
+    
         ROW_NUMBER() OVER (
+        
             PARTITION BY only_year
+            
             ORDER BY CountOfEmp DESC
+            
         ) AS rankbyemp
+        
     FROM dept_sum
+    
 )
 
 SELECT
+
     only_year,
+    
     dept_name,
+    
     CountOfEmp,
+    
     ROUND(AvgSal, 2) AS AverageSalary
+    
 FROM ranked
+
 WHERE rankbyemp = 1
+
 ORDER BY only_year;
 
 Result
