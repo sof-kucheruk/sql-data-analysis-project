@@ -600,27 +600,6 @@ Result
 
 ---
 
-# 📂 Project Structure
-sql-data-analysis-project/
-│
-├── SQL Step Project Kucheruk Sofia.sql
-├── README.md
-│
-└── images/
-    ├── Q1.png
-    ├── Q2.png
-    ├── Q3.png
-    ├── Q4.png
-    ├── Q5.png
-    ├── Q6.png
-    ├── Q7.png
-    ├── Q8.png
-    ├── Q9.png
-    ├── Q10.png
-    └── Q11.png
-
----
-
 # 🎯 Project Goal
 
 The goal of this project was to strengthen practical SQL skills through data analysis and relational database design.
