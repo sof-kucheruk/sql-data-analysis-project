@@ -146,28 +146,51 @@ Result
 ### 2. Which current manager has been working in the position the longest?
 
 SQL Query
+
 SELECT
+
     emp.emp_no,
+    
     dep.dept_name,
+    
     deptman.dept_no,
+    
     CONCAT(emp.first_name, ' ', emp.last_name) AS full_name,
+    
     emp.gender,
+    
     emp.birth_date,
+    
     emp.hire_date,
+    
     deptman.from_date,
+    
     deptman.to_date,
+    
     TIMESTAMPDIFF(
+    
         YEAR,
+        
         deptman.from_date,
+        
         CURRENT_DATE
+        
     ) AS work_as_manager
+    
 FROM employees.employees emp
+
 INNER JOIN employees.dept_manager deptman
+
     ON emp.emp_no = deptman.emp_no
+    
 INNER JOIN employees.departments dep
+
     ON deptman.dept_no = dep.dept_no
+    
 WHERE CURRENT_DATE BETWEEN deptman.from_date AND deptman.to_date
+
 ORDER BY work_as_manager DESC
+
 LIMIT 1;
 
 Result
