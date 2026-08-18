@@ -1,4 +1,177 @@
-email,
+SQL Data Analysis Project
+📌 Project Overview
+This project contains a collection of SQL queries and database design tasks completed in MySQL.
+The project is divided into two main parts:
+Part 1 — Employee Data Analysis
+Part 2 — Course Management Database
+The project demonstrates practical SQL skills including:
+JOINs
+CTEs
+Aggregate Functions
+Window Functions
+Temporary Tables
+Database Creation
+Primary & Foreign Keys
+Duplicate Detection
+
+
+⸻
+
+
+🛠️ Technologies
+MySQL
+SQL
+CTEs
+Window Functions
+Aggregate Functions
+JOINs
+Temporary Tables
+Primary & Foreign Keys
+
+
+⸻
+
+
+Part 1 — Employee Data Analysis
+The first part focuses on analyzing an employee database containing information about employees, departments, managers, and salaries.
+Questions I Wanted to Answer From the Dataset
+1. Which department was the largest in each year, and what was its average salary?
+WITH dept_year AS (
+    SELECT 
+        dep.dept_name,
+        EXTRACT(YEAR FROM deptemp.from_date) AS only_year,
+        deptemp.emp_no
+    FROM employees.dept_emp deptemp
+    INNER JOIN employees.departments dep 
+        ON deptemp.dept_no = dep.dept_no
+),
+salary_year AS (
+    SELECT 
+        sal.emp_no,
+        EXTRACT(YEAR FROM sal.from_date) AS only_year,
+        sal.salary
+    FROM employees.salaries sal 
+),
+dept_sum AS (
+    SELECT 
+        dy.only_year,
+        dy.dept_name,
+        COUNT(DISTINCT dy.emp_no) AS CountOfEmp,
+        AVG(sy.salary) AS AvgSal
+    FROM dept_year dy
+    INNER JOIN salary_year sy
+        ON dy.emp_no = sy.emp_no 
+       AND dy.only_year = sy.only_year
+    GROUP BY dy.only_year, dy.dept_name
+),
+ranked AS (
+    SELECT *,
+           ROW_NUMBER() OVER (
+               PARTITION BY only_year 
+               ORDER BY CountOfEmp DESC
+           ) AS rankbyemp
+    FROM dept_sum
+)
+SELECT 
+    only_year,
+    dept_name,
+    CountOfEmp,
+    ROUND(AvgSal, 2) AS AvarageSalary
+FROM ranked 
+WHERE rankbyemp = 1
+ORDER BY only_year;
+Result:
+
+
+⸻
+
+
+2. Which current manager has been working in the position the longest?
+SELECT emp.emp_no,
+       dep.dept_name,
+       deptman.dept_no,
+       CONCAT(emp.first_name, " ", emp.last_name) AS full_name,
+       emp.gender,
+       emp.birth_date,
+       emp.hire_date,
+       deptman.from_date,
+       deptman.to_date,
+       TIMESTAMPDIFF(
+           YEAR, 
+           deptman.from_date, 
+           CURRENT_DATE
+       ) AS work_as_manager
+FROM employees.employees emp
+INNER JOIN employees.dept_manager deptman
+    ON emp.emp_no = deptman.emp_no
+INNER JOIN employees.departments dep
+    ON deptman.dept_no = dep.dept_no
+WHERE CURRENT_DATE BETWEEN deptman.from_date AND deptman.to_date
+ORDER BY work_as_manager DESC 
+LIMIT 1;
+Result:
+
+
+⸻
+
+
+3. What was the average employee salary for each year before 2005?
+SELECT 
+    YEAR(sal.from_date) AS YearOfSal,
+    ROUND(AVG(sal.salary), 2) AS AvgSal
+FROM employees.salaries sal
+WHERE sal.from_date < '2005-01-01'
+GROUP BY YEAR(sal.from_date)
+ORDER BY YEAR(sal.from_date) DESC;
+Result:
+
+
+⸻
+
+
+4. What is the current average salary in each department?
+The calculation is based on the employee’s current salary and current department.
+SELECT dept.dept_no,
+       dept.dept_name,
+       ROUND(AVG(sal.salary), 2) AS AvgSal
+FROM employees.dept_emp deptemp
+INNER JOIN employees.departments dept
+    ON deptemp.dept_no = dept.dept_no
+INNER JOIN employees.salaries sal
+    ON deptemp.emp_no = sal.emp_no
+    AND CURRENT_DATE() BETWEEN sal.from_date AND sal.to_date
+WHERE CURRENT_DATE() BETWEEN deptemp.from_date AND deptemp.to_date
+GROUP BY dept.dept_no,
+         dept.dept_name
+ORDER BY dept.dept_no ASC;
+Result:
+
+
+⸻
+
+
+5. What was the average salary in each department for each year?
+SELECT 
+    deptemp.dept_no,
+    YEAR(sal.from_date) AS YearOfSal,
+    ROUND(AVG(sal.salary), 2) AS AvgSal
+FROM employees.dept_emp deptemp
+INNER JOIN employees.salaries sal
+    ON deptemp.emp_no = sal.emp_no
+GROUP BY deptemp.dept_no,
+         YEAR(sal.from_date)
+ORDER BY deptemp.dept_no ASC;
+Result:
+
+
+⸻
+
+
+6. Which departments currently have more than 15,000 employees?
+SELECT 
+    deptemp.dept_no,
+    dep.dept_name,
+    COUNT(deptemp.email,
     birth_date,
     COUNT(*) AS CountOfDuplicates
 FROM course_system.students
