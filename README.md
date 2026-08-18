@@ -1,99 +1,110 @@
-SQL Data Analysis Project
-📌 Project Overview
+# SQL Data Analysis Project
+
+## 📌 Project Overview
+
 This project contains a collection of SQL queries and database design tasks completed in MySQL.
+
 The project is divided into two main parts:
-Part 1 — Employee Data Analysis
-Part 2 — Course Management Database
+
+- Part 1 — Employee Data Analysis
+- Part 2 — Course Management Database
+
 The project demonstrates practical SQL skills including:
-JOINs
-CTEs
-Aggregate Functions
-Window Functions
-Temporary Tables
-Database Creation
-Primary & Foreign Keys
-Duplicate Detection
 
+- JOINs
+- CTEs
+- Aggregate Functions
+- Window Functions
+- Temporary Tables
+- Database Creation
+- Primary & Foreign Keys
+- Duplicate Detection
 
-⸻
+---
 
+## 🛠 Technologies
 
-🛠 Technologies
-MySQL
-SQL
-CTEs
-Window Functions
-Aggregate Functions
-JOINs
-Temporary Tables
-Primary & Foreign Keys
+- MySQL
+- SQL
+- CTEs
+- Window Functions
+- Aggregate Functions
+- JOINs
+- Temporary Tables
+- Primary & Foreign Keys
 
+---
 
-⸻
+# 📊 Part 1 — Employee Data Analysis
 
-
-📊 Part 1 — Employee Data Analysis
 The first part focuses on analyzing an employee database containing information about employees, departments, managers, and salaries.
-Questions I Wanted to Answer From the Dataset
-1. Which department was the largest in each year, and what was its average salary?
+
+## Questions I Wanted to Answer From the Dataset
+
+### 1. Which department was the largest in each year, and what was its average salary?
+
 SQL Query
 WITH dept_year AS (
-    SELECT    
+    SELECT
         dep.dept_name,
         EXTRACT(YEAR FROM deptemp.from_date) AS only_year,
         deptemp.emp_no
     FROM employees.dept_emp deptemp
-    INNER JOIN employees.departments dep 
+    INNER JOIN employees.departments dep
         ON deptemp.dept_no = dep.dept_no
 ),
 
 salary_year AS (
-    SELECT 
-        sal.emp_no, 
+    SELECT
+        sal.emp_no,
         EXTRACT(YEAR FROM sal.from_date) AS only_year,
-        sal.salary 
-    FROM employees.salaries sal   
+        sal.salary
+    FROM employees.salaries sal
 ),
 
 dept_sum AS (
-    SELECT 
+    SELECT
         dy.only_year,
         dy.dept_name,
         COUNT(DISTINCT dy.emp_no) AS CountOfEmp,
         AVG(sy.salary) AS AvgSal
     FROM dept_year dy
     INNER JOIN salary_year sy
-        ON dy.emp_no = sy.emp_no 
-       AND dy.only_year = sy.only_year
-    GROUP BY dy.only_year, dy.dept_name
+        ON dy.emp_no = sy.emp_no
+        AND dy.only_year = sy.only_year
+    GROUP BY
+        dy.only_year,
+        dy.dept_name
 ),
 
 ranked AS (
     SELECT *,
-           ROW_NUMBER() OVER (
-               PARTITION BY only_year 
-               ORDER BY CountOfEmp DESC
-           ) AS rankbyemp
+        ROW_NUMBER() OVER (
+            PARTITION BY only_year
+            ORDER BY CountOfEmp DESC
+        ) AS rankbyemp
     FROM dept_sum
 )
 
-SELECT 
+SELECT
     only_year,
     dept_name,
     CountOfEmp,
     ROUND(AvgSal, 2) AS AverageSalary
-FROM ranked 
+FROM ranked
 WHERE rankbyemp = 1
 ORDER BY only_year;
+
 Result
 
+![Q1 Result](images/Q1.png)
 
-⸻
+---
 
+### 2. Which current manager has been working in the position the longest?
 
-2. Which current manager has been working in the position the longest?
 SQL Query
-SELECT 
+SELECT
     emp.emp_no,
     dep.dept_name,
     deptman.dept_no,
@@ -104,8 +115,8 @@ SELECT
     deptman.from_date,
     deptman.to_date,
     TIMESTAMPDIFF(
-        YEAR, 
-        deptman.from_date, 
+        YEAR,
+        deptman.from_date,
         CURRENT_DATE
     ) AS work_as_manager
 FROM employees.employees emp
@@ -114,33 +125,38 @@ INNER JOIN employees.dept_manager deptman
 INNER JOIN employees.departments dep
     ON deptman.dept_no = dep.dept_no
 WHERE CURRENT_DATE BETWEEN deptman.from_date AND deptman.to_date
-ORDER BY work_as_manager DESC 
+ORDER BY work_as_manager DESC
 LIMIT 1;
+
 Result
 
+![Q2 Result](images/Q2.png)
 
-⸻
+---
 
+### 3. What was the average employee salary for each year before 2005?
 
-3. What was the average employee salary for each year before 2005?
 SQL Query
-SELECT 
+SELECT
     YEAR(sal.from_date) AS YearOfSal,
     ROUND(AVG(sal.salary), 2) AS AvgSal
 FROM employees.salaries sal
 WHERE sal.from_date < '2005-01-01'
 GROUP BY YEAR(sal.from_date)
 ORDER BY YEAR(sal.from_date) DESC;
+
 Result
 
+![Q3 Result](images/Q3.png)
 
-⸻
+---
 
+### 4. What is the current average salary in each department?
 
-4. What is the current average salary in each department?
-The calculation is based on the employee’s current salary and current department.
+The calculation is based on the employee's current salary and current department.
+
 SQL Query
-SELECT 
+SELECT
     dept.dept_no,
     dept.dept_name,
     ROUND(AVG(sal.salary), 2) AS AvgSal
@@ -151,41 +167,45 @@ INNER JOIN employees.salaries sal
     ON deptemp.emp_no = sal.emp_no
     AND CURRENT_DATE() BETWEEN sal.from_date AND sal.to_date
 WHERE CURRENT_DATE() BETWEEN deptemp.from_date AND deptemp.to_date
-GROUP BY 
+GROUP BY
     dept.dept_no,
     dept.dept_name
 ORDER BY dept.dept_no ASC;
+
 Result
 
+![Q4 Result](images/Q4.png)
 
-⸻
+---
 
+### 5. What was the average salary in each department for each year?
 
-5. What was the average salary in each department for each year?
 SQL Query
-SELECT 
+SELECT
     deptemp.dept_no,
     YEAR(sal.from_date) AS YearOfSal,
     ROUND(AVG(sal.salary), 2) AS AvgSal
 FROM employees.dept_emp deptemp
 INNER JOIN employees.salaries sal
     ON deptemp.emp_no = sal.emp_no
-GROUP BY 
-    deptemp.dept_no,
+GROUP BY
+    deptemp.
+    dept_no,
     YEAR(sal.from_date)
 ORDER BY deptemp.dept_no ASC;
+
 Result
 
+![Q5 Result](images/Q5.png)
 
-⸻
+---
 
+### 6. Which departments currently have more than 15,000 employees?
 
-6. Which departments currently have more than 15,000 employees?
 SQL Query
-SELECT 
+SELECT
     deptemp.dept_no,
-    dep.
-dept_name,
+    dep.dept_name,
     COUNT(deptemp.emp_no) AS CountOfEmp
 FROM employees.departments dep
 INNER JOIN employees.dept_emp deptemp
@@ -194,15 +214,17 @@ INNER JOIN employees.dept_emp deptemp
 GROUP BY deptemp.dept_no
 HAVING COUNT(deptemp.emp_no) > 15000
 ORDER BY deptemp.dept_no ASC;
+
 Result
 
+![Q6 Result](images/Q6.png)
 
-⸻
+---
 
+### 7. Who is the longest-serving current manager?
 
-7. Who is the longest-serving current manager?
 SQL Query
-SELECT 
+SELECT
     emp.emp_no,
     deptman.dept_no,
     dep.dept_name,
@@ -216,16 +238,18 @@ INNER JOIN employees.departments dep
 WHERE CURRENT_DATE BETWEEN deptman.from_date AND deptman.to_date
 ORDER BY emp.hire_date ASC
 LIMIT 1;
+
 Result
 
+![Q7 Result](images/Q7.png)
 
-⸻
+---
 
+### 8. Which 10 current employees have the largest difference between their salary and the average salary of their department?
 
-8. Which 10 current employees have the largest difference between their salary and the average salary of their department?
 SQL Query
 WITH DeptAvgSalary AS (
-    SELECT 
+    SELECT
         deptemp.dept_no,
         AVG(sal.salary) AS AvgSalary
     FROM employees.dept_emp deptemp
@@ -236,7 +260,7 @@ WITH DeptAvgSalary AS (
     GROUP BY deptemp.dept_no
 )
 
-SELECT 
+SELECT
     emp.emp_no,
     CONCAT(emp.first_name, ' ', emp.last_name) AS full_name,
     dep.dept_no,
@@ -259,25 +283,28 @@ INNER JOIN DeptAvgSalary depavgsal
     AND CURRENT_DATE BETWEEN sal.from_date AND sal.to_date
 ORDER BY ABS(sal.salary - depavgsal.AvgSalary) DESC
 LIMIT 10;
+
 Result
 
+![Q8 Result](images/Q8.png)
 
-⸻
+---
 
+### 9. Who was the second manager of each department?
 
-9. Who was the second manager of each department?
-First, a temporary table was created using the ROW_NUMBER() window function to rank managers within each department.
+First, a temporary table was created using the ROW_NUMBER() window function.
+
 SQL Query
 CREATE TEMPORARY TABLE IF NOT EXISTS employees.temp_manager
-AS 
-SELECT 
+AS
+SELECT
     dep.dept_no,
     dep.dept_name,
     CONCAT(emp.first_name, ' ', emp.last_name) AS full_name,
     emp.hire_date AS EmployeeHireDate,
     deptman.from_date AS ManagerStartDate,
     ROW_NUMBER() OVER (
-        PARTITION BY dep.dept_no 
+        PARTITION BY dep.dept_no
         ORDER BY deptman.from_date
     ) AS RowNumber
 FROM employees.employees emp
@@ -289,36 +316,44 @@ INNER JOIN employees.departments dep
 SELECT *
 FROM employees.temp_manager
 WHERE RowNumber = 2;
+
 Result
 
+![Q9 Result](images/Q9.png)
 
-⸻
+---
 
+# 🗄️ Part 2 — Course Management Database
 
-🗄️ Part 2 — Course Management Database
 The second part focuses on creating a relational database for managing teachers, courses, and students.
-Questions I Wanted to Answer From the Course Database
-10. How many students has each teacher worked with?
+
+## Questions I Wanted to Answer From the Course Database
+
+### 10. How many students has each teacher worked with?
+
 SQL Query
-SELECT 
+SELECT
     teach.teacher_no,
     teach.teacher_name,
     COUNT(stud.student_name) AS NumberOfStudents
 FROM course_system.teachers teach
 INNER JOIN course_system.students stud
     ON teach.teacher_no = stud.teacher_no
-GROUP BY 
+GROUP BY
     teach.teacher_no,
     teach.teacher_name
 ORDER BY teach.teacher_no;
+
 Result
 
+![Q10 Result](images/Q10.png)
 
-⸻
+---
 
+### 11. Which rows are duplicated in the students table?
 
-11. Which rows are duplicated in the students table?
 First, three duplicate rows were intentionally added.
+
 SQL Query
 INSERT INTO students (
     teacher_no,
@@ -327,7 +362,7 @@ INSERT INTO students (
     email,
     birth_date
 )
-SELECT 
+SELECT
     teacher_no,
     course_no,
     student_name,
@@ -335,8 +370,9 @@ SELECT
     birth_date
 FROM course_system.students
 LIMIT 3;
+
 Then the duplicate rows were identified:
-SELECT 
+SELECT
     teacher_no,
     course_no,
     student_name,
@@ -344,56 +380,42 @@ SELECT
     birth_date,
     COUNT(*) AS CountOfDuplicates
 FROM course_system.students
-GROUP BY 
+GROUP BY
     teacher_no,
     course_no,
     student_name,
     email,
     birth_date
 HAVING COUNT(*) > 1;
+
 Result
 
+![Q11 Result](images/Q11.png)
 
-⸻
+---
 
+# 🛠 SQL Skills Demonstrated
 
-🛠 SQL Skills Demonstrated
-Category
-SQL Skills
-Basic Queries
-SELECT, WHERE, ORDER BY
-Aggregation
-GROUP BY, HAVING, COUNT(), AVG()
-Joins
-INNER JOIN
-Date Functions
-YEAR(), EXTRACT(), TIMESTAMPDIFF()
-String Functions
-CONCAT()
-Numeric Functions
-ROUND(), ABS()
-Advanced SQL
-CTEs, Window Functions
-Window Functions
-ROW_NUMBER()
-Temporary Objects
-Temporary Tables
-Database Design
-Database & Table Creation
-Relationships
-Primary Keys, Foreign Keys
-Data Integrity
-Referential Integrity
-Data Quality
-Duplicate Detection
-Transactions
-Transactions
+| Category | SQL Skills |
+|---|---|
+| Basic Queries | SELECT, WHERE, ORDER BY |
+| Aggregation | GROUP BY, HAVING, COUNT(), AVG() |
+| Joins | INNER JOIN |
+| Date Functions | YEAR(), EXTRACT(), TIMESTAMPDIFF() |
+| String Functions | CONCAT() |
+| Numeric Functions | ROUND(), ABS() |
+| Advanced SQL | CTEs, Window Functions |
+| Window Functions | ROW_NUMBER() |
+| Temporary Objects | Temporary Tables |
+| Database Design | Database & Table Creation |
+| Relationships | Primary Keys, Foreign Keys |
+| Data Integrity | Referential Integrity |
+| Data Quality | Duplicate Detection |
+| Transactions | Transactions |
 
+---
 
-⸻
-
-
-📂 Project Structure
+# 📂 Project Structure
 sql-data-analysis-project/
 │
 ├── SQL Step Project Kucheruk Sofia.sql
@@ -412,25 +434,27 @@ sql-data-analysis-project/
     ├── Q10.png
     └── Q11.png
 
+---
 
-⸻
+# 🎯 Project Goal
 
-
-🎯 Project Goal
 The goal of this project was to strengthen practical SQL skills through data analysis and relational database design.
+
 The project demonstrates how SQL can be used to:
-analyze employee and salary data;
-work with multiple related tables;
-calculate business metrics;
-use advanced SQL techniques;
-create relational databases;
-establish relationships between tables;
-identify duplicate records;
-work with historical and current data.
 
+- analyze employee and salary data;
+- work with multiple related tables;
+- calculate business metrics;
+- use advanced SQL techniques;
+- create relational databases;
+- establish relationships between tables;
+- identify duplicate records;
+- work with historical and current data.
 
-⸻
+---
 
+## 👩‍💻 Author
 
-👩‍💻 Author
 Sofia Kucheruk
+
+Aspiring Data Analyst with a focus on SQL, Power BI, Excel and Python.
