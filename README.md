@@ -44,6 +44,8 @@ The first part focuses on analyzing an employee database containing information 
 ### 1. Which department was the largest in each year, and what was its average salary?
 
 SQL Query
+
+```sql
 WITH dept_year AS (
     SELECT
         dep.dept_name,
