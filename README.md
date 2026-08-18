@@ -1,5 +1,4 @@
-student_name,
-    email,
+email,
     birth_date,
     COUNT(*) AS CountOfDuplicates
 FROM course_system.students
