@@ -104,7 +104,7 @@ ranked AS (
                ORDER BY CountOfEmp DESC
            ) AS rankbyemp
     FROM dept_sum
-)
+),
 
 SELECT 
     only_year,
