@@ -293,7 +293,7 @@ ORDER BY deptemp.dept_no ASC;
 
 Result
 
-![Q5 Result](images/Q5.png)
+![Q5 Result](images/Q51.png) ![Q5 Result](images/Q52.png) ![Q5 Result](images/Q53.png)
 
 ---
 
